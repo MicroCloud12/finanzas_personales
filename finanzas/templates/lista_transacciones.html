@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Detalle de Transacciones</h1>
+
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <table class="min-w-full leading-normal">
+            <thead>
+                <tr class="border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-5 py-3">Fecha</th>
+                    <th class="px-5 py-3">Descripción</th>
+                    <th class="px-5 py-3">Categoría</th>
+                    <th class="px-5 py-3">Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaccion in transacciones %}
+                    <tr class="border-b border-gray-200">
+                        <td class="px-5 py-5 bg-white text-sm">{{ transaccion.fecha|date:"Y-m-d" }}</td>
+                        <td class="px-5 py-5 bg-white text-sm">{{ transaccion.descripcion }}</td>
+                        <td class="px-5 py-5 bg-white text-sm">{{ transaccion.categoria }}</td>
+                        <td class="px-5 py-5 bg-white text-sm font-semibold {% if transaccion.tipo == 'INGRESO' %}text-green-600{% else %}text-red-600{% endif %}">
+                            {% if transaccion.tipo == 'GASTO' %}-{% endif %}${{ transaccion.monto|floatformat:2|intcomma }}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-10">No hay transacciones para este periodo.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
