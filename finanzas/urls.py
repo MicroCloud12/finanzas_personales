@@ -12,4 +12,6 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('dashboard/', views.vista_dashboard, name='dashboard'),
     path('listatransacciones/', views.lista_transacciones, name='lista_transacciones'),
+    path('api/datos-gastos-categoria/', views.datos_gastos_categoria, name='api_datos_gastos'),
+    path('api/datos-flujo-dinero/', views.datos_flujo_dinero, name='api_flujo_dinero'),
 ]

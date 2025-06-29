@@ -61,18 +61,149 @@
                 <p class="text-2xl font-bold text-gray-900">${{ ahorro|floatformat:2 | intcomma}}</p>
             </div>
         </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4">
+            <div class="bg-yellow-100 p-3 rounded-full"><svg class="w-6 h-6 text-yellow-500" ...></svg></div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Transferencias</p>
+                <p class="text-2xl font-bold text-gray-900">${{ transferencias |floatformat:2 | intcomma}}</p>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4">
+            <div class="bg-yellow-100 p-3 rounded-full"><svg class="w-6 h-6 text-yellow-500" ...></svg></div>
+            <div>
+                <p class="text-sm font-medium text-gray-500">Disponible en Banco</p>
+                <p class="text-2xl font-bold text-gray-900">${{ disponible_banco |floatformat:2 | intcomma}}</p>
+            </div>
+        </div>
     </div>
     
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white p-6 rounded-xl shadow-lg">
-            <h3 class="text-lg font-semibold text-gray-700">Gastos por Categoría</h3>
-            <canvas id="gastosPorCategoriaChart"></canvas>
-        </div>
-        <div class="bg-white p-6 rounded-xl shadow-lg">
-            <h3 class="text-lg font-semibold text-gray-700">Flujo Mensual</h3>
-            <canvas id="flujoDeDineroChart"></canvas>
-        </div>
-    </div>
+    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Gastos por Categoría</h3>
+            <div class="relative h-170">
+                <canvas id="gastosPorCategoriaChart"></canvas>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Ingresos vs Gastos</h3>
+            <div class="relative h-170">
+                <canvas id="flujoDeDineroChart"></canvas>
+            </div>
+        </div>
+
+    </div>
 </div>
+...
+<script>
+// Nos aseguramos de que el DOM esté completamente cargado antes de ejecutar el script
+document.addEventListener('DOMContentLoaded', function() {
+    // Obtenemos el "lienzo" donde se dibujará el gráfico
+    const ctx = document.getElementById('gastosPorCategoriaChart').getContext('2d');
+
+    // Creamos la URL para nuestra API, usando los filtros actuales de la página
+    const url = `{% url 'api_datos_gastos' %}?year={{ selected_year }}&month={{ selected_month }}`;
+
+    // Usamos la función 'fetch' de JavaScript para llamar a nuestra API
+    fetch(url)
+        .then(response => response.json()) // Convertimos la respuesta a JSON
+        .then(data => { // Una vez que tenemos los datos...
+
+            // Creamos un nuevo gráfico usando Chart.js
+            new Chart(ctx, {
+                type: 'doughnut', // Tipo de gráfico: de dona (parecido al de pastel)
+                data: {
+                    labels: data.labels, // Las etiquetas (ej: 'Comida', 'Renta') vienen de nuestra API
+                    datasets: [{
+                        label: 'Gastos por Categoría',
+                        data: data.data, // Los datos (ej: 5000, 2500) vienen de nuestra API
+                        backgroundColor: [ // Una paleta de colores
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(255, 206, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(153, 102, 255, 0.8)',
+                            'rgba(255, 159, 64, 0.8)'
+                        ],
+                        borderColor: 'rgba(255, 255, 255, 0.5)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- GRÁFICO 1: GASTOS POR CATEGORÍA (código que ya tienes) ---
+    const ctxPie = document.getElementById('gastosPorCategoriaChart').getContext('2d');
+    const urlPie = `{% url 'api_datos_gastos' %}?year={{ selected_year }}&month={{ selected_month }}`;
+    fetch(urlPie)
+        .then(response => response.json())
+        .then(data => {
+            new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: [/* ... tus colores ... */],
+                        // ... más opciones ...
+                    }]
+                },
+                // ... opciones ...
+            });
+        });
+
+    // --- GRÁFICO 2: FLUJO DE DINERO (código nuevo) ---
+    const ctxBar = document.getElementById('flujoDeDineroChart').getContext('2d');
+    const urlBar = `{% url 'api_flujo_dinero' %}?year={{ selected_year }}&month={{ selected_month }}`;
+    fetch(urlBar)
+        .then(response => response.json())
+        .then(data => {
+            new Chart(ctxBar, {
+                type: 'bar', // Tipo de gráfico: de barras
+                data: {
+                    labels: data.labels, // ['Ingresos', 'Gastos']
+                    datasets: [{
+                        label: 'Flujo de Dinero',
+                        data: data.data, // [valor_ingresos, valor_gastos]
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.6)', // Color para la barra de Ingresos
+                            'rgba(255, 99, 132, 0.6)'  // Color para la barra de Gastos
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, // <-- LA LÍNEA MÁGICA
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+            });
+        });
+});
+</script>
 {% endblock %}

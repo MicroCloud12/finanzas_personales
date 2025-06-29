@@ -11,9 +11,10 @@ class registro_transacciones(models.Model):
     TIPO_CHOICES = [
         ('INGRESO', 'Ingreso'),
         ('GASTO', 'Gasto'),
+        ('TRANSFERENCIA','Transferencia'),
 
     ]
-    tipo = models.CharField(max_length=7, choices=TIPO_CHOICES)
+    tipo = models.CharField(max_length=15, choices=TIPO_CHOICES)
     cuenta_origen = models.CharField(max_length=100)
     cuenta_destino = models.CharField(max_length=100)
     id_prestamo_ref = models.CharField(max_length=10, blank=True, null=True)
