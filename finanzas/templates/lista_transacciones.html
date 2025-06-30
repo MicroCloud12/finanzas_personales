@@ -10,7 +10,7 @@
                 + Añadir Transacción
             </a>
             <a href="#" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out">
-                + Extraer Automáticamente
+                + Añadir Automáticamente
             </a>
         </div>
     </div>
@@ -21,8 +21,8 @@
                     <th class="px-5 py-3">Fecha</th>
                     <th class="px-5 py-3">Descripción</th>
                     <th class="px-5 py-3">Categoría</th>
-                    <!--<th class="px-5 py-3">Tipo</th>
-                    <th class="px-5 py-3">Cuenta Origen</th>-->
+                    <th class="px-5 py-3">Tipo</th>
+                    <th class="px-5 py-3">Cuenta Origen</th>
                     <th class="px-5 py-3">Monto</th>
                 </tr>
             </thead>
@@ -32,8 +32,10 @@
                         <td class="px-5 py-5 bg-white text-sm">{{ transaccion.fecha|date:"Y-m-d" }}</td>
                         <td class="px-5 py-5 bg-white text-sm">{{ transaccion.descripcion }}</td>
                         <td class="px-5 py-5 bg-white text-sm">{{ transaccion.categoria }}</td>
+                        <td class="px-5 py-5 bg-white text-sm">{{ transaccion.tipo }}</td>
+                        <td class="px-5 py-5 bg-white text-sm">{{ transaccion.cuenta_origen }}</td>
                         <td class="px-5 py-5 bg-white text-sm font-semibold {% if transaccion.tipo == 'INGRESO' %}text-green-600{% else %}text-red-600{% endif %}">
-                            {% if transaccion.tipo == 'GASTO' %}-{% endif %}${{ transaccion.monto|floatformat:2|intcomma }}
+                            ${{ transaccion.monto|floatformat:2|intcomma }}
                         </td>
                     </tr>
                 {% empty %}
