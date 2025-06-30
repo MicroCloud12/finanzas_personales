@@ -3,8 +3,17 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Detalle de Transacciones</h1>
-
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Detalle de Transacciones</h1>
+        <div class="flex items-center space-x-4"> 
+            <a href="{% url 'crear_transacciones' %}" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                + Añadir Transacción
+            </a>
+            <a href="#" class="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out">
+                + Extraer Automáticamente
+            </a>
+        </div>
+    </div>
     <div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <table class="min-w-full leading-normal">
             <thead>
@@ -12,6 +21,8 @@
                     <th class="px-5 py-3">Fecha</th>
                     <th class="px-5 py-3">Descripción</th>
                     <th class="px-5 py-3">Categoría</th>
+                    <!--<th class="px-5 py-3">Tipo</th>
+                    <th class="px-5 py-3">Cuenta Origen</th>-->
                     <th class="px-5 py-3">Monto</th>
                 </tr>
             </thead>
