@@ -8,6 +8,10 @@ from django.contrib.auth import login
 from django.shortcuts import render, redirect
 from .forms import FormularioRegistroPersonalizado
 from django.contrib.auth.decorators import login_required
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def home(request):
     return render(request, 'index.html')
@@ -58,12 +62,11 @@ def vista_dashboard(request):
     #disponible_banco = gastos = transacciones.filter(tipo='GASTO').exclude(categoria='Ahorro').exclude(categoria='Ahorro').filter(cuenta_origen = 'Efectivo Quincena').aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
     transferencias = transacciones.filter(tipo='TRANSFERENCIA').exclude(categoria='Ahorro').exclude(categoria='Ahorro').filter(cuenta_origen = 'Efectivo Quincena').aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
 
-    # --- DEPURACIÓN CON PRINT (VERSIÓN FINAL) ---
-    print("--- INICIANDO DEPURACIÓN DE VALORES FINALES ---")
-    print(f"Valor de 'ingresos': {ingresos} (Tipo: {type(ingresos)})")
-    print(f"Valor de 'gastos': {gastos} (Tipo: {type(gastos)})")
-    print("---------------------------------------------")
-    # ----------------------------------------------------
+    # --- Registro de datos de depuración ---
+    logger.debug("--- INICIANDO DEPURACIÓN DE VALORES FINALES ---")
+    logger.debug("Valor de 'ingresos': %s (Tipo: %s)", ingresos, type(ingresos))
+    logger.debug("Valor de 'gastos': %s (Tipo: %s)", gastos, type(gastos))
+    logger.debug("---------------------------------------------")
     
     # Esta es la línea que da el error
     balance = ingresos - gastos

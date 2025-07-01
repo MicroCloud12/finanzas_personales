@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,19 @@ NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-96&mm2#f@c87t7g9$(9_f7kalnt9q&k$88@)^!pc&+7yk*0b0r'
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-96&mm2#f@c87t7g9$(9_f7kalnt9q&k$88@)^!pc&+7yk*0b0r",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True").lower() in ["1", "true", "yes"]
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    h.strip()
+    for h in os.environ.get("ALLOWED_HOSTS", "").split(",")
+    if h.strip()
+]
 
 
 # Application definition
@@ -78,12 +86,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql', # <-- ¡Perfecto!
-        'NAME': 'finanzas_db',          # <-- Detalle #1
-        'USER': 'finanzas_user', # <-- Detalle #2
-        'PASSWORD': 'zLf,)uXZma5H0mG5',      # <-- ¡Perfecto!
-        'HOST': '127.0.0.1',                  # <-- ¡Perfecto!
-        'PORT': '3306', 
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'finanzas_db'),
+        'USER': os.environ.get('DB_USER', 'finanzas_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'zLf,)uXZma5H0mG5'),
+        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('DB_PORT', '3306'), 
     }
 }
 
@@ -148,3 +156,18 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
+
+# Basic logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}

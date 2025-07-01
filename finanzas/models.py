@@ -20,4 +20,4 @@ class registro_transacciones(models.Model):
     id_prestamo_ref = models.CharField(max_length=10, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.id_transaccion} - {self.descripcion}"
+        return f"{self.id} - {self.descripcion}"
