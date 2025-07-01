@@ -21,3 +21,19 @@ class registro_transacciones(models.Model):
 
     def __str__(self):
         return f"{self.id} - {self.descripcion}"
+    
+# NUEVO MODELO PARA CREDENCIALES DE GOOGLE
+class GoogleCredentials(models.Model):
+    # Un enlace uno-a-uno con el usuario de Django. Cada usuario solo puede tener un set de credenciales.
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+    # Usamos TextField porque los tokens pueden ser largos
+    token = models.TextField()
+    refresh_token = models.TextField(null=True, blank=True)
+    token_uri = models.CharField(max_length=255)
+    client_id = models.CharField(max_length=255)
+    client_secret = models.CharField(max_length=255)
+    scopes = models.TextField()
+
+    def __str__(self):
+        return f"Credenciales de Google para {self.user.username}"

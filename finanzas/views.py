@@ -59,7 +59,8 @@ def vista_dashboard(request):
     # La línea completa y corregida
     ingresos = transacciones.filter(tipo='INGRESO').exclude(categoria='Ahorro').filter(cuenta_origen = 'Efectivo Quincena').aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
     gastos = transacciones.filter(tipo='GASTO').exclude(categoria='Ahorro').filter(cuenta_origen = 'Efectivo Quincena').aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
-    #disponible_banco = gastos = transacciones.filter(tipo='GASTO').exclude(categoria='Ahorro').exclude(categoria='Ahorro').filter(cuenta_origen = 'Efectivo Quincena').aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
+    ahorro_total = transacciones.filter(tipo='INGRESO').filter(categoria='Ahorro').filter(cuenta_origen = 'Cuenta Ahorro').aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
+    proviciones = transacciones.filter(tipo='GASTO').exclude(categoria='Ahorro').filter(cuenta_origen = 'Cuenta Ahorro').aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
     transferencias = transacciones.filter(tipo='TRANSFERENCIA').exclude(categoria='Ahorro').exclude(categoria='Ahorro').filter(cuenta_origen = 'Efectivo Quincena').aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
 
     # --- Registro de datos de depuración ---
@@ -71,6 +72,7 @@ def vista_dashboard(request):
     # Esta es la línea que da el error
     balance = ingresos - gastos
     disponible_banco = ingresos - gastos - transferencias
+    ahorro = ahorro_total - proviciones
     # Preparamos el contexto para enviarlo a la plantilla
     context = {
         'ingresos': ingresos,
@@ -78,7 +80,7 @@ def vista_dashboard(request):
         'balance': balance,
         'transferencias':transferencias,
         'disponible_banco':disponible_banco,
-        #'ahorro': ahorro,
+        'ahorro': ahorro,
         'selected_year': year,
         'selected_month': month,
         'years': range(current_year, current_year - 5, -1), # Para el dropdown de años

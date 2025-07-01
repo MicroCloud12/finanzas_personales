@@ -49,6 +49,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.sites', # Requerido por allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    # Proveedor específico de Google
+    'allauth.socialaccount.providers.google',
 ]
 
 MIDDLEWARE = [
@@ -170,4 +176,23 @@ LOGGING = {
         'handlers': ['console'],
         'level': 'INFO',
     },
+}
+
+SITE_ID = 1
+# Allauth Settings
+ACCOUNT_EMAIL_VERIFICATION = 'optional' # Puedes cambiarlo a 'mandatory' si quieres verificación de email
+LOGIN_REDIRECT_URL = '/dashboard/' # Ya lo tenías, pero asegúrate de que esté
+ACCOUNT_LOGOUT_ON_GET = True # Permite el logout con GET para simplificar
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+            'https://www.googleapis.com/auth/drive.readonly', # Permiso para LEER archivos de Drive
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'offline', # crucial para obtener un refresh_token y acceder cuando el usuario no está
+        }
+    }
 }
