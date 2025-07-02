@@ -9,6 +9,8 @@ from django.shortcuts import render, redirect
 from .forms import FormularioRegistroPersonalizado
 from django.contrib.auth.decorators import login_required
 import logging
+from django.shortcuts import render, redirect
+from .tasks import procesar_tickets_drive # Asegúrate de que esta línea esté al inicio
 
 logger = logging.getLogger(__name__)
 
@@ -193,3 +195,26 @@ def datos_flujo_dinero(request):
     }
 
     return JsonResponse(data)
+
+
+@login_required
+def vista_procesamiento_automatico(request):
+    """
+    Muestra la página dedicada para el procesamiento de tickets desde Drive.
+    """
+    return render(request, 'procesamiento_automatico.html')
+
+
+
+
+@login_required
+def iniciar_procesamiento_drive(request):
+    """
+    Esta es la vista que se activa con el botón.
+    Llama a la tarea de Celery para que haga el trabajo pesado en segundo plano.
+    """
+    # Se invoca la tarea con .delay() para que se ejecute de forma asíncrona
+    procesar_tickets_drive.delay(request.user.id)
+
+    # Redirigimos al usuario inmediatamente a otra página para que no tenga que esperar
+    return redirect('procesamiento_automatico')

@@ -14,4 +14,6 @@ urlpatterns = [
     path('listatransacciones/', views.lista_transacciones, name='lista_transacciones'),
     path('api/datos-gastos-categoria/', views.datos_gastos_categoria, name='api_datos_gastos'),
     path('api/datos-flujo-dinero/', views.datos_flujo_dinero, name='api_flujo_dinero'),
+    path('procesamiento-automatico/', views.vista_procesamiento_automatico, name='procesamiento_automatico'),
+    path('procesar-drive/', views.iniciar_procesamiento_drive, name='procesar_drive'),
 ]
