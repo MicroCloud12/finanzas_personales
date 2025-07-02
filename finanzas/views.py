@@ -9,8 +9,10 @@ from django.shortcuts import render, redirect
 from .forms import FormularioRegistroPersonalizado
 from django.contrib.auth.decorators import login_required
 import logging
-from django.shortcuts import render, redirect
 from .tasks import procesar_tickets_drive # Asegúrate de que esta línea esté al inicio
+from django.contrib import messages
+from allauth.socialaccount.models import SocialToken
+
 
 logger = logging.getLogger(__name__)
 
@@ -204,17 +206,26 @@ def vista_procesamiento_automatico(request):
     """
     return render(request, 'procesamiento_automatico.html')
 
-
-
-
 @login_required
 def iniciar_procesamiento_drive(request):
     """
-    Esta es la vista que se activa con el botón.
-    Llama a la tarea de Celery para que haga el trabajo pesado en segundo plano.
+    Esta vista ahora busca el token y se lo pasa directamente a la tarea de Celery.
     """
-    # Se invoca la tarea con .delay() para que se ejecute de forma asíncrona
-    procesar_tickets_drive.delay(request.user.id)
+    try:
+        # Buscamos el token aquí, en el proceso web que sabemos que lo puede ver.
+        google_token = SocialToken.objects.get(account__user=request.user, account__provider='google')
+        
+        token = google_token.token
+        refresh_token = google_token.token_secret # En allauth, el refresh token se guarda aquí.
 
-    # Redirigimos al usuario inmediatamente a otra página para que no tenga que esperar
+        # Invocamos la tarea, pero ahora le pasamos los tokens como argumentos.
+        procesar_tickets_drive.delay(request.user.id, token, refresh_token)
+        
+        messages.success(request, "¡Éxito! Se ha iniciado la sincronización de tus tickets. Esto puede tardar unos minutos.")
+
+    except SocialToken.DoesNotExist:
+        messages.error(request, "Error: No se encontró una cuenta de Google vinculada. Por favor, conéctala de nuevo.")
+        pass
+
+    # Redirigimos al usuario para que no tenga que esperar.
     return redirect('procesamiento_automatico')
