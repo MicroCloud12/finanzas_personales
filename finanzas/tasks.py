@@ -84,7 +84,7 @@ def procesar_tickets_drive(user_id, auth_token, refresh_token):
 
         if not items:
             print("No se encontraron nuevos tickets para procesar.")
-            return "No hay archivos nuevos."
+            return {'status': 'NO_FILES', 'message': 'No se encontraron nuevos tickets en tu Drive.'}
 
         print(f"Se encontraron {len(items)} tickets. Procesando...")
         for item in items:
@@ -96,14 +96,43 @@ def procesar_tickets_drive(user_id, auth_token, refresh_token):
             image = Image.open(file_content)
 
             prompt = """
-            Caso 1: Analiza la imagen de este ticket de compra. Extrae la siguiente información y devuélvela ESTRICTAMENTE en formato JSON, sin texto adicional antes o después del JSON:
-                - "fecha": La fecha en formato YYYY-MM-DD.
-                - "establecimiento": El nombre de la tienda.
-                - "total": El monto total como un número (float).
-            Caso 2: Analiza la imagen de este comprobante de transferencia. Extrae la siguiente información y devuélvela ESTRICTAMENTE en formato JSON:
-                - "fecha": La fecha en formato YYYY-MM-DD.
-                - "descripcion": El concepto de la transferencia.
-                - "total": El monto como un número (float).
+                    Eres un asistente experto en contabilidad para un sistema de finanzas personales.
+                    Tu tarea es analizar la imagen de un documento y extraer la información clave con la máxima precisión.
+                    Devuelve SIEMPRE la respuesta en formato JSON, sin absolutamente ningún texto adicional.
+
+                    ### CONTEXTO:
+                    El usuario ha subido una imagen de un ticket de compra o un comprobante de transferencia.
+                    Necesito que identifiques el tipo de documento y extraigas los siguientes campos:
+
+                    ### FORMATO DE SALIDA ESTRICTO (JSON):
+                    {
+                    "tipo_documento": "(TICKET_COMPRA|TRANSFERENCIA|OTRO)",
+                    "fecha": "YYYY-MM-DD",
+                    "establecimiento": "Nombre del comercio o beneficiario",
+                    "descripcion_corta": "Un resumen breve del gasto (ej. 'Renta depto', 'Supermercado', 'Cena con amigos')",
+                    "total": 0.00,
+                    "confianza_extraccion": "(ALTA|MEDIA|BAJA)"
+                    }
+                    
+                    ### REGLAS DE EXTRACCIÓN:
+                    1.  **fecha**: Busca la fecha principal. Si no la encuentras, usa la fecha actual. Formato YYYY-MM-DD.
+                    2.  **establecimiento**: El nombre principal de la tienda (ej. "Walmart", "Starbucks", "CFE"). Si es una transferencia, el nombre del beneficiario.
+                    3.  **descripcion_corta**: Si es un ticket con muchos artículos, pon "Supermercado" o "Compra tienda". Si es una transferencia, usa el concepto.
+                    4.  **total**: El monto TOTAL final. Debe ser un número (float), sin el símbolo de moneda.
+                    5.  **confianza_extraccion**: Evalúa tu propia certeza.
+                        - **ALTA**: Si la imagen es clara y todos los campos son obvios.
+                        - **MEDIA**: Si la imagen es un poco borrosa o un campo es ambiguo.
+                        - **BAJA**: Si la imagen es muy difícil de leer o faltan datos clave.
+
+                    ### EJEMPLOS:
+                    - **Ejemplo 1 (Ticket claro):**
+                    { "tipo_documento": "TICKET_COMPRA", "fecha": "2025-07-03", "establecimiento": "La Comer", "descripcion_corta": "Supermercado", "total": 854.50, "confianza_extraccion": "ALTA" }
+                    - **Ejemplo 2 (Transferencia):**
+                    { "tipo_documento": "TRANSFERENCIA", "fecha": "2025-07-01", "establecimiento": "Juan Pérez", "descripcion_corta": "Renta Julio", "total": 7500.00, "confianza_extraccion": "ALTA" }
+                    - **Ejemplo 3 (Ticket borroso):**
+                    { "tipo_documento": "TICKET_COMPRA", "fecha": "2025-06-28", "establecimiento": "Restaurante El Sol", "descripcion_corta": "Comida", "total": 450.00, "confianza_extraccion": "MEDIA" }
+
+                    Ahora, analiza la siguiente imagen:
             """
             
             response = model.generate_content([prompt, image])
@@ -129,5 +158,7 @@ def procesar_tickets_drive(user_id, auth_token, refresh_token):
 
     except Exception as e:
         print(f"Ocurrió un error inesperado en la tarea Celery: {type(e).__name__} - {e}")
+        # En caso de un error mayor, también devolvemos un estado claro
+        return {'status': 'ERROR', 'message': str(e)}
 
     return f"Procesamiento finalizado para el usuario {user_id}."

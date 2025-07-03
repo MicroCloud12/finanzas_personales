@@ -32,11 +32,11 @@
             </button>
         </form>
     </div>
-
+    <!-- Ingresos del Mes -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4">
-            <div class="bg-green-100 p-3 rounded-full">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-green-600">
+            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 5.814 5.518l2.74 1.22m0 0-5.94-2.28m5.94 2.28L18.75 21" />
                 </svg>
             </div>
@@ -45,6 +45,7 @@
                 <p class="text-2xl font-bold text-gray-900">${{ ingresos|floatformat:2 | intcomma}}</p>
             </div>
         </div>
+    
         <!-- Gastos del Mes -->
         <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4">
             <div class="bg-red-100 p-3 rounded-full">

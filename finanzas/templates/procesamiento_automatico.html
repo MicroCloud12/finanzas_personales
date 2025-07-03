@@ -3,44 +3,64 @@
 {% load socialaccount %}
 
 {% block content %}
-<div class="container mx-auto mt-10 p-5">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Procesamiento Automático de Tickets</h1>
-    
+{# --- CONTENEDOR PRINCIPAL AJUSTADO --- #}
+<div class="max-w-md mx-auto mt-10 mb-10">
     <div class="bg-white p-8 rounded-lg shadow-md border border-gray-200">
-        <h2 class="text-xl font-semibold mb-4">Paso 1: Conecta tu cuenta de Google Drive</h2>
-        {% if user.socialaccount_set.all %}
-            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded" role="alert">
-                <p class="font-bold">¡Conectado!</p>
-                <p>Tu cuenta de Google Drive ya está vinculada.</p>
-            </div>
-        {% else %}
+
+        <h1 class="text-2xl font-bold mb-6 text-center">Procesamiento Automático</h1>
+
+        {# --- PASO 1: CONEXIÓN --- #}
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Paso 1: Conectar Cuenta</h2>
+            {% if user.socialaccount_set.all %}
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 rounded" role="alert">
+                    <p class="font-bold">¡Conectado!</p>
+                    <p class="text-sm">Tu cuenta de Google Drive ya está vinculada.</p>
+                </div>
+            {% else %}
+                 <p class="text-gray-600 mb-3 text-sm">
+                    Para poder leer tus tickets, primero necesitamos tu permiso.
+                </p>
+                <a href="{% provider_login_url 'google' auth_params='access_type=offline&prompt=consent' %}" class="w-full flex items-center justify-center bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-sm">
+                    <img class="h-6 w-6 mr-2" src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google logo">
+                    <span>Conectar con Google Drive</span>
+                </a>
             {% endif %}
+        </div>
         
-        <hr class="my-8">
+        <hr class="my-6">
 
-        <h2 class="text-xl font-semibold mb-4">Paso 2: Iniciar la Sincronización</h2>
-        <p class="text-gray-600 mb-5">
-            Haz clic en el botón de abajo para buscar y procesar nuevos tickets en tu Google Drive. Esto puede tardar unos minutos.
-        </p>
+        {# --- PASO 2: SINCRONIZACIÓN --- #}
+        <div>
+            <h2 class="text-lg font-semibold mb-2">Paso 2: Sincronizar</h2>
+            <p class="text-gray-600 mb-3 text-sm">
+                Busca y procesa nuevos tickets en tu Google Drive.
+            </p>
 
-        {% if user.socialaccount_set.all %}
-            <button id="sync-button" data-url="{% url 'procesar_drive' %}" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow-lg">
-                Sincronizar Tickets de Drive
-            </button>
-        {% else %}
+            {% if user.socialaccount_set.all %}
+                <button id="sync-button" data-url="{% url 'procesar_drive' %}" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md shadow-lg">
+                    Sincronizar Tickets
+                </button>
+            {% else %}
+                 <button class="w-full bg-gray-400 text-white font-bold py-2 px-4 rounded-md cursor-not-allowed" disabled>
+                    Sincronizar Tickets
+                </button>
             {% endif %}
 
-        <div id="progress-wrapper" class="hidden mt-6">
-            <p id="progress-text" class="text-center text-gray-700 mb-2">Procesando, por favor espera...</p>
-            <div class="w-full bg-gray-200 rounded-full h-4">
-                <div id="progress-bar" class="bg-blue-600 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+            <div id="progress-wrapper" class="hidden mt-4">
+                <p id="progress-text" class="text-center text-sm text-gray-700 mb-2">Procesando...</p>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
             </div>
         </div>
-        </div>
+
+    </div>
 </div>
 {% endblock %}
 
 {% block javascript %}
+{# El código JavaScript para la barra de progreso se queda exactamente igual #}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const syncButton = document.getElementById('sync-button');
@@ -50,18 +70,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (syncButton) {
         syncButton.addEventListener('click', function() {
-            // 1. Preparamos la UI para mostrar el progreso
             syncButton.disabled = true;
             syncButton.textContent = 'Procesando...';
             progressWrapper.classList.remove('hidden');
-            progressBar.style.width = '10%'; // Empezamos con un poco de progreso
+            progressBar.style.width = '10%';
 
-            // 2. Llamamos a la vista que inicia la tarea
             fetch(this.dataset.url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.task_id) {
-                        // 3. Si tenemos un ID, empezamos a consultar el estado
                         pollTaskStatus(data.task_id);
                     } else {
                         throw new Error(data.error || 'No se pudo iniciar la tarea.');
@@ -72,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     progressText.textContent = 'Error al iniciar. Intenta de nuevo.';
                     progressBar.classList.add('bg-red-500');
                     syncButton.disabled = false;
-                    syncButton.textContent = 'Sincronizar Tickets de Drive';
+                    syncButton.textContent = 'Sincronizar Tickets';
                 });
         });
     }
@@ -82,22 +99,42 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(`/task-status/${taskId}/`)
                 .then(response => response.json())
                 .then(data => {
-                    // Actualizamos la barra de progreso
                     let currentWidth = parseFloat(progressBar.style.width) || 0;
                     if (currentWidth < 90) {
-                        progressBar.style.width = (currentWidth + 10) + '%';
+                        progressBar.style.width = (currentWidth + 5) + '%';
                     }
 
                     if (data.task_status === 'SUCCESS') {
-                        // 4. ¡Tarea completada!
                         clearInterval(interval);
-                        progressBar.style.width = '100%';
-                        progressText.textContent = '¡Proceso completado! Redirigiendo...';
-                        progressBar.classList.remove('bg-blue-600');
-                        progressBar.classList.add('bg-green-500');
                         
-                        // Redirigimos a la página de revisión
-                        window.location.href = "{% url 'revisar_tickets' %}";
+                        // --- LÓGICA MEJORADA ---
+                        const result = data.task_result;
+                        if (result.status === 'SUCCESS' && result.processed_count > 0) {
+                            // Caso de éxito real
+                            progressBar.style.width = '100%';
+                            progressText.textContent = `¡Éxito! Se procesaron ${result.processed_count} tickets. Redirigiendo...`;
+                            progressBar.classList.remove('bg-blue-600');
+                            progressBar.classList.add('bg-green-500');
+                            window.location.href = "{% url 'revisar_tickets' %}";
+
+                        } else if (result.status === 'NO_FILES') {
+                            // Caso: No se encontraron archivos
+                            progressText.textContent = 'No se encontraron tickets nuevos para procesar.';
+                            progressBar.style.width = '0%';
+                            progressBar.classList.remove('bg-blue-600');
+                            progressBar.classList.add('bg-yellow-500'); // Un color de advertencia
+                            syncButton.disabled = false;
+                            syncButton.textContent = 'Volver a Sincronizar';
+
+                        } else {
+                            // Caso: Éxito, pero 0 tickets procesados (o algún otro estado)
+                            progressText.textContent = 'El proceso finalizó pero no se registró ningún ticket nuevo.';
+                            progressBar.style.width = '0%';
+                             syncButton.disabled = false;
+                            syncButton.textContent = 'Volver a Sincronizar';
+                        }
+                        // --- FIN DE LÓGICA MEJORADA ---
+
                     } else if (data.task_status === 'FAILURE') {
                         // La tarea falló
                         clearInterval(interval);
@@ -106,10 +143,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         syncButton.disabled = false;
                         syncButton.textContent = 'Sincronizar Tickets de Drive';
                     }
-                    // Si el estado es PENDING o PROGRESS, no hacemos nada y el intervalo seguirá consultando.
                 });
-        }, 2000); // Consultamos cada 2 segundos
+        }, 2000);
     }
 });
 </script>
-{% endblock %}
+{% endblock javascript %}
