@@ -1,22 +1,19 @@
+import logging
 from decimal import Decimal
 from datetime import datetime
-from django.db.models import Sum
+from django.contrib import messages
 from django.http import JsonResponse
 from .forms import TransaccionesForm
-from .models import registro_transacciones
+from celery.result import AsyncResult
 from django.contrib.auth import login
+from .tasks import procesar_tickets_drive
+from .models import registro_transacciones
 from django.shortcuts import render, redirect
 from .forms import FormularioRegistroPersonalizado
-from django.contrib.auth.decorators import login_required
-import logging
-from .tasks import procesar_tickets_drive # Asegúrate de que esta línea esté al inicio
-from django.contrib import messages
 from allauth.socialaccount.models import SocialToken
+from django.contrib.auth.decorators import login_required
 from .models import registro_transacciones, TransaccionPendiente
-from decimal import Decimal
-from datetime import datetime
-from django.http import JsonResponse
-from celery.result import AsyncResult
+from django.db.models import Sum, Case, When, F, Value, DecimalField, Q
 
 
 logger = logging.getLogger(__name__)
