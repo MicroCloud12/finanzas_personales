@@ -13,7 +13,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from PIL import Image
 import google.generativeai as genai
-from .models import registro_transacciones
+from .models import registro_transacciones, TransaccionPendiente
 
 
 def get_folder_id(drive_service, folder_name: str, parent_folder_id: str = 'root'):
@@ -112,21 +112,16 @@ def procesar_tickets_drive(user_id, auth_token, refresh_token):
             try:
                 data = json.loads(cleaned_response)
                 
-                fecha_obj = datetime.strptime(data.get("fecha"), "%Y-%m-%d").date()
-
-                registro_transacciones.objects.create(
+                # 4. GUARDAR EN LA TABLA TEMPORAL:
+                # Ahora creamos un objeto TransaccionPendiente
+                TransaccionPendiente.objects.create(
                     propietario=usuario,
-                    fecha=fecha_obj,
-                    descripcion=data.get("descripcion", data.get("establecimiento", "Sin descripción")),
-                    categoria="Compra",
-                    monto=Decimal(data.get("total", 0.0)),
-                    tipo='GASTO',
-                    cuenta_origen="Ticket de Drive",
-                    cuenta_destino="N/A"
+                    datos_json=data,
+                    estado='pendiente'
                 )
-                print(f"¡Éxito! Ticket '{item['name']}' guardado en la base de datos.")
-
-                move_file_to_processed(drive_service, file_id, folder_id)
+                print(f"¡Éxito! Ticket '{item['name']}' guardado como pendiente para revisión.")
+                
+                # ... (el resto del código para mover el archivo en Drive se queda igual) ...
 
             except (json.JSONDecodeError, KeyError, ValueError) as e:
                 print(f"Error al procesar o guardar datos del ticket '{item['name']}': {e}")

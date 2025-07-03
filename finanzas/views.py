@@ -12,6 +12,9 @@ import logging
 from .tasks import procesar_tickets_drive # Asegúrate de que esta línea esté al inicio
 from django.contrib import messages
 from allauth.socialaccount.models import SocialToken
+from .models import registro_transacciones, TransaccionPendiente
+from decimal import Decimal
+from datetime import datetime
 
 
 logger = logging.getLogger(__name__)
@@ -229,3 +232,36 @@ def iniciar_procesamiento_drive(request):
 
     # Redirigimos al usuario para que no tenga que esperar.
     return redirect('procesamiento_automatico')
+
+@login_required
+def revisar_tickets(request):
+    tickets_pendientes = TransaccionPendiente.objects.filter(propietario=request.user, estado='pendiente')
+    return render(request, 'revisar_tickets.html', {'tickets': tickets_pendientes})
+
+@login_required
+def aprobar_ticket(request, ticket_id):
+    ticket = TransaccionPendiente.objects.get(id=ticket_id, propietario=request.user)
+    datos = ticket.datos_json
+
+    # Creamos el registro en la tabla principal
+    registro_transacciones.objects.create(
+        propietario=request.user,
+        fecha=datetime.strptime(datos.get("fecha"), "%Y-%m-%d").date(),
+        descripcion=datos.get("descripcion", datos.get("establecimiento", "Sin descripción")),
+        categoria="Compra",
+        monto=Decimal(datos.get("total", 0.0)),
+        tipo='GASTO'
+    )
+
+    # Marcamos el ticket como aprobado (o lo borramos)
+    ticket.estado = 'aprobada'
+    ticket.save()
+
+    return redirect('revisar_tickets')
+
+@login_required
+def rechazar_ticket(request, ticket_id):
+    ticket = TransaccionPendiente.objects.get(id=ticket_id, propietario=request.user)
+    ticket.estado = 'rechazada'
+    ticket.save()
+    return redirect('revisar_tickets')

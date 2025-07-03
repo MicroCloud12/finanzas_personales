@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto mt-10 p-5">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800">Revisar Tickets Pendientes</h1>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for ticket in tickets %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ ticket.datos_json.fecha }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{ ticket.datos_json.descripcion|default:ticket.datos_json.establecimiento }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${{ ticket.datos_json.total }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="{% url 'aprobar_ticket' ticket.id %}" class="text-green-600 hover:text-green-900 mr-4">Aprobar</a>
+                        <a href="{% url 'rechazar_ticket' ticket.id %}" class="text-red-600 hover:text-red-900">Rechazar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">No hay tickets pendientes por revisar.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

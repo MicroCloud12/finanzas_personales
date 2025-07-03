@@ -37,3 +37,24 @@ class GoogleCredentials(models.Model):
 
     def __str__(self):
         return f"Credenciales de Google para {self.user.username}"
+    
+# finanzas/models.py
+
+# ... (tus otros modelos como registro_transacciones) ...
+
+class TransaccionPendiente(models.Model):
+    ESTADOS = (
+        ('pendiente', 'Pendiente'),
+        ('aprobada', 'Aprobada'),
+        ('rechazada', 'Rechazada'),
+    )
+    
+    propietario = models.ForeignKey(User, on_delete=models.CASCADE)
+    datos_json = models.JSONField() # Aquí guardaremos el resultado de Gemini
+    estado = models.CharField(max_length=10, choices=ESTADOS, default='pendiente')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        # Intenta mostrar una descripción o el total para que sea fácil de leer en el admin
+        descripcion = self.datos_json.get('descripcion', self.datos_json.get('establecimiento', 'N/A'))
+        return f"Pendiente de {self.propietario.username} - {descripcion}"
