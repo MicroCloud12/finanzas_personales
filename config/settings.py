@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,13 +22,11 @@ NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "django-insecure-96&mm2#f@c87t7g9$(9_f7kalnt9q&k$88@)^!pc&+7yk*0b0r",
-)
+SECRET_KEY = config('SECRET_KEY')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "True").lower() in ["1", "true", "yes"]
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = [
     h.strip()
@@ -93,12 +92,13 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME', 'finanzas_db'),
-        'USER': os.environ.get('DB_USER', 'finanzas_user'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'zLf,)uXZma5H0mG5'),
-        'HOST': os.environ.get('DB_HOST', '127.0.0.1'),
-        'PORT': os.environ.get('DB_PORT', '3306'), 
+        # CAMBIA ESTA LÍNEA
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': 'localhost', # o 127.0.0.1
+        'PORT': config('DATABASE_PORT', default='3306'), # <-- Añade esta línea
     }
 }
 
@@ -200,4 +200,4 @@ SOCIALACCOUNT_PROVIDERS = {
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_STORE_TOKENS = True
-GEMINI_API_KEY = "AIzaSyAMli9iQZprw6cG1M-bHuiWk_n7YYiHmrU"
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
