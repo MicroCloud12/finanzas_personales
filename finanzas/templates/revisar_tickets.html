@@ -1,29 +1,56 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="container mx-auto mt-10 p-5">
     <h1 class="text-3xl font-bold mb-6 text-gray-800">Revisar Tickets Pendientes</h1>
-
-    <div class="bg-white p-6 rounded-lg shadow-md">
+    <div class="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for ticket in tickets %}
                 <tr>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ ticket.datos_json.fecha }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ ticket.datos_json.descripcion|default:ticket.datos_json.establecimiento }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${{ ticket.datos_json.total }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="{% url 'aprobar_ticket' ticket.id %}" class="text-green-600 hover:text-green-900 mr-4">Aprobar</a>
-                        <a href="{% url 'rechazar_ticket' ticket.id %}" class="text-red-600 hover:text-red-900">Rechazar</a>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 align-middle">{{ ticket.datos_json.fecha }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 align-middle">{{ ticket.datos_json.descripcion|default:ticket.datos_json.establecimiento }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold align-middle">${{ ticket.datos_json.total }}</td>
+
+                    {# --- SECCIÓN DE ACCIONES ACTUALIZADA --- #}
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium align-middle">
+                        <form action="{% url 'aprobar_ticket' ticket.id %}" method="POST" class="flex items-center space-x-3">
+                            {% csrf_token %}
+                            
+                            <div>
+                                <label for="cuenta_origen_{{ ticket.id }}" class="sr-only">Cuenta Origen</label>
+                                <select id="cuenta_origen_{{ ticket.id }}" name="cuenta_origen" class="block w-40 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                                    <option>Efectivo Quincena</option>
+                                    <option>Cuenta Ahorro</option>
+                                    <option>Tarjeta de Crédito</option>
+                                    <option>Otra Cuenta</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="categoria_{{ ticket.id }}" class="sr-only">Categoría</label>
+                                <select id="categoria_{{ ticket.id }}" name="categoria" class="block w-40 border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 sm:text-sm">
+                                    <option>Comida</option>
+                                    <option>Transporte</option>
+                                    <option>Supermercado</option>
+                                    <option>Entretenimiento</option>
+                                    <option>Servicios</option>
+                                    <option>Otro</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="text-green-600 hover:text-green-900 font-semibold">Aprobar</button>
+                            <a href="{% url 'rechazar_ticket' ticket.id %}" class="text-red-600 hover:text-red-900 font-semibold pl-2">Rechazar</a>
+                        </form>
                     </td>
+                    {# --- FIN DE LA SECCIÓN ACTUALIZADA --- #}
                 </tr>
                 {% empty %}
                 <tr>

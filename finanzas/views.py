@@ -15,6 +15,8 @@ from allauth.socialaccount.models import SocialToken
 from .models import registro_transacciones, TransaccionPendiente
 from decimal import Decimal
 from datetime import datetime
+from django.http import JsonResponse
+from celery.result import AsyncResult
 
 
 logger = logging.getLogger(__name__)
@@ -222,10 +224,11 @@ def iniciar_procesamiento_drive(request):
         refresh_token = google_token.token_secret # En allauth, el refresh token se guarda aquí.
 
         # Invocamos la tarea, pero ahora le pasamos los tokens como argumentos.
-        procesar_tickets_drive.delay(request.user.id, token, refresh_token)
-        
+        task = procesar_tickets_drive.delay(request.user.id, token, refresh_token)
         messages.success(request, "¡Éxito! Se ha iniciado la sincronización de tus tickets. Esto puede tardar unos minutos.")
-
+        # Devolvemos el ID de la tarea en formato JSON.
+        return JsonResponse({"task_id": task.id}, status=202)
+    
     except SocialToken.DoesNotExist:
         messages.error(request, "Error: No se encontró una cuenta de Google vinculada. Por favor, conéctala de nuevo.")
         pass
@@ -240,24 +243,42 @@ def revisar_tickets(request):
 
 @login_required
 def aprobar_ticket(request, ticket_id):
-    ticket = TransaccionPendiente.objects.get(id=ticket_id, propietario=request.user)
-    datos = ticket.datos_json
-
-    # Creamos el registro en la tabla principal
-    registro_transacciones.objects.create(
-        propietario=request.user,
-        fecha=datetime.strptime(datos.get("fecha"), "%Y-%m-%d").date(),
-        descripcion=datos.get("descripcion", datos.get("establecimiento", "Sin descripción")),
-        categoria="Compra",
-        monto=Decimal(datos.get("total", 0.0)),
-        tipo='GASTO'
-    )
-
-    # Marcamos el ticket como aprobado (o lo borramos)
-    ticket.estado = 'aprobada'
-    ticket.save()
-
+    if request.method == 'POST': # Solo si se envía el formulario
+        ticket = TransaccionPendiente.objects.get(id=ticket_id, propietario=request.user)
+        datos = ticket.datos_json
+        
+        # Obtenemos la cuenta del formulario que acabamos de enviar
+        cuenta_seleccionada = request.POST.get('cuenta_origen')
+        categoria_seleccionada = request.POST.get('categoria') # <-- NUEVA LÍNEA
+        
+        registro_transacciones.objects.create(
+            propietario=request.user,
+            fecha=datetime.strptime(datos.get("fecha"), "%Y-%m-%d").date(),
+            descripcion=datos.get("descripcion", datos.get("establecimiento", "Sin descripción")),
+            categoria=categoria_seleccionada, # <-- USAMOS LA CATEGORÍA SELECCIONADA
+            monto=Decimal(datos.get("total", 0.0)),
+            tipo='GASTO',
+            cuenta_origen=cuenta_seleccionada # ¡Usamos la cuenta seleccionada!
+        )
+        
+        ticket.estado = 'aprobada'
+        ticket.save()
+        
     return redirect('revisar_tickets')
+
+# --- AÑADE ESTA NUEVA VISTA ---
+@login_required
+def get_task_status(request, task_id):
+    """
+    Consulta y devuelve el estado de una tarea de Celery.
+    """
+    task_result = AsyncResult(task_id)
+    result = {
+        "task_id": task_id,
+        "task_status": task_result.status,
+        "task_result": task_result.result if task_result.ready() else None
+    }
+    return JsonResponse(result, status=200)
 
 @login_required
 def rechazar_ticket(request, ticket_id):

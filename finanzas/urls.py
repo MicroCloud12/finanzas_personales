@@ -19,4 +19,5 @@ urlpatterns = [
     path('revisar-tickets/', views.revisar_tickets, name='revisar_tickets'),
     path('aprobar-ticket/<int:ticket_id>/', views.aprobar_ticket, name='aprobar_ticket'),
     path('rechazar-ticket/<int:ticket_id>/', views.rechazar_ticket, name='rechazar_ticket'),
+    path('task-status/<str:task_id>/', views.get_task_status, name='get_task_status'),
 ]
